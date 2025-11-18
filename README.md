@@ -1,0 +1,20 @@
+## .env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=laravel
+DB_PASSWORD=laravel
+
+## users
+
+### admin
+```
+php artisan migrate --seed
+```
+создает 
+email:admin@example.com
+password:secret123
+ 
+### guest
+/register
