@@ -177,14 +177,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Административные маршруты
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::middleware(function ($request, $next) {
-        if (!auth()->user()?->isAdmin()) {
-            abort(403);
-        }
-
-        return $next($request);
-    })->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', function () {
             $date = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
             $halls = \App\Models\Hall::with(['seats' => function ($query) {
@@ -411,7 +404,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
             return back()->with('success', 'Цены успешно обновлены');
         })->name('prices.update');
-    });
 });
 
 Route::get('/dashboard', function () {
