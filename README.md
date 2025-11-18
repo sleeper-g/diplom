@@ -21,6 +21,7 @@ podman run -d \
 
 podman ps
 ```
+проверить, что  mysql запущен
 
 ## Установка проекта
 ```bash
@@ -52,8 +53,12 @@ DB_PASSWORD=laravel
 ```
 php artisan migrate --seed
 ```
-создает 
-email:admin@example.com
-password:secret123
+создает
+
+email:admin@cinema.local
+
+password:password
  
 ### guest
+
+http://127.0.0.1:8000/register
