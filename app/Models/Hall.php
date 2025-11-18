@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Hall extends Model
 {
-    protected $fillable = ['name', 'rows', 'seats_per_row'];
+    protected $fillable = ['name', 'rows', 'seats_per_row', 'is_active'];
 
     // Зал имеет много мест
     public function seats()

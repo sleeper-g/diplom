@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(SettingSeeder::class);
+
         // Создание администратора
         User::firstOrCreate(
            ['email' => 'admin@cinema.local'],

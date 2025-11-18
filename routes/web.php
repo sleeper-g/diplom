@@ -104,8 +104,8 @@ Route::middleware('auth')->group(function () {
             $seats = $session->hall->fresh()->seats;
         }
         
-        $regularPrice = 500; // Можно вынести в настройки
-        $vipPrice = 1000;
+        $regularPrice = (int) \App\Models\Setting::getValue('regular_price', config('cinema.default_regular_price'));
+        $vipPrice = (int) \App\Models\Setting::getValue('vip_price', config('cinema.default_vip_price'));
         return view('booking.create', compact('session', 'seats', 'regularPrice', 'vipPrice'));
     })->name('booking.create');
 
@@ -178,237 +178,245 @@ Route::middleware('auth')->group(function () {
 
 // Административные маршруты
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Проверка на админа через middleware или в контроллерах
-    Route::get('/halls', function () {
-        if (!auth()->user()->isAdmin()) {
+    Route::middleware(function ($request, $next) {
+        if (!auth()->user()?->isAdmin()) {
             abort(403);
         }
-        $halls = \App\Models\Hall::all();
-        return view('admin.halls.index', compact('halls'));
-    })->name('halls.index');
 
-    Route::get('/halls/create', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        return view('admin.halls.create');
-    })->name('halls.create');
+        return $next($request);
+    })->group(function () {
+        Route::get('/', function () {
+            $date = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
+            $halls = \App\Models\Hall::with(['seats' => function ($query) {
+                $query->orderBy('row')->orderBy('number');
+            }])->orderBy('name')->get();
+            $movies = \App\Models\Movie::orderBy('title')->get();
+            $sessions = \App\Models\Session::with(['movie', 'hall'])
+                ->whereDate('start_time', $date)
+                ->orderBy('start_time')
+                ->get();
+            $selectedHallId = request('hall_id', $halls->first()?->id);
+            $selectedHall = $halls->firstWhere('id', (int) $selectedHallId);
+            $regularPrice = \App\Models\Setting::getValue('regular_price', config('cinema.default_regular_price'));
+            $vipPrice = \App\Models\Setting::getValue('vip_price', config('cinema.default_vip_price'));
+            $stats = [
+                'activeHalls' => $halls->where('is_active', true)->count(),
+                'totalHalls' => $halls->count(),
+                'sessionsCount' => $sessions->count(),
+                'ticketsToday' => \App\Models\Ticket::whereDate('created_at', $date)->count(),
+            ];
 
-    Route::post('/halls', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $validated = request()->validate([
-            'name' => 'required|string|max:255',
-            'rows' => 'required|integer|min:1|max:20',
-            'seats_per_row' => 'required|integer|min:1|max:30',
-        ]);
-        
-        $hall = \App\Models\Hall::create($validated);
-        
-        // Создаем места для зала
-        for ($row = 1; $row <= $hall->rows; $row++) {
-            for ($seat = 1; $seat <= $hall->seats_per_row; $seat++) {
-                \App\Models\Seat::create([
-                    'hall_id' => $hall->id,
-                    'row' => $row,
-                    'number' => $seat,
-                    'type' => 'regular', // Можно сделать логику для VIP мест
-                ]);
+            return view('admin.dashboard', compact(
+                'halls',
+                'selectedHall',
+                'selectedHallId',
+                'movies',
+                'sessions',
+                'date',
+                'regularPrice',
+                'vipPrice',
+                'stats'
+            ));
+        })->name('dashboard');
+
+        Route::get('/halls', function () {
+            $halls = \App\Models\Hall::orderBy('name')->get();
+            return view('admin.halls.index', compact('halls'));
+        })->name('halls.index');
+
+        Route::get('/halls/create', function () {
+            return view('admin.halls.create');
+        })->name('halls.create');
+
+        Route::post('/halls', function () {
+            $validated = request()->validate([
+                'name' => 'required|string|max:255',
+                'rows' => 'required|integer|min:1|max:20',
+                'seats_per_row' => 'required|integer|min:1|max:30',
+            ]);
+
+            $hall = \App\Models\Hall::create([
+                'name' => $validated['name'],
+                'rows' => $validated['rows'],
+                'seats_per_row' => $validated['seats_per_row'],
+                'is_active' => request()->boolean('is_active'),
+            ]);
+
+            for ($row = 1; $row <= $hall->rows; $row++) {
+                for ($seat = 1; $seat <= $hall->seats_per_row; $seat++) {
+                    \App\Models\Seat::create([
+                        'hall_id' => $hall->id,
+                        'row' => $row,
+                        'number' => $seat,
+                        'type' => 'regular',
+                    ]);
+                }
             }
-        }
-        
-        return redirect()->route('admin.halls.index')->with('success', 'Зал успешно создан');
-    })->name('halls.store');
 
-    Route::get('/halls/{id}/edit', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $hall = \App\Models\Hall::findOrFail($id);
-        return view('admin.halls.edit', compact('hall'));
-    })->name('halls.edit');
+            return redirect()->route('admin.halls.index')->with('success', 'Зал успешно создан');
+        })->name('halls.store');
 
-    Route::put('/halls/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $hall = \App\Models\Hall::findOrFail($id);
-        $validated = request()->validate([
-            'name' => 'required|string|max:255',
-            'rows' => 'required|integer|min:1|max:20',
-            'seats_per_row' => 'required|integer|min:1|max:30',
-        ]);
-        
-        $hall->update($validated);
-        return redirect()->route('admin.halls.index')->with('success', 'Зал успешно обновлен');
-    })->name('halls.update');
+        Route::post('/halls/{id}/toggle-status', function ($id) {
+            $hall = \App\Models\Hall::findOrFail($id);
+            $hall->update([
+                'is_active' => !$hall->is_active,
+            ]);
 
-    Route::delete('/halls/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $hall = \App\Models\Hall::findOrFail($id);
-        $hall->delete();
-        return redirect()->route('admin.halls.index')->with('success', 'Зал успешно удален');
-    })->name('halls.destroy');
+            $message = $hall->is_active
+                ? 'Продажа билетов открыта'
+                : 'Продажа билетов приостановлена';
 
-    // Movies
-    Route::get('/movies', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $movies = \App\Models\Movie::all();
-        return view('admin.movies.index', compact('movies'));
-    })->name('movies.index');
+            return back()->with('success', "{$hall->name}: {$message}");
+        })->name('halls.toggle');
 
-    Route::get('/movies/create', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        return view('admin.movies.create');
-    })->name('movies.create');
+        Route::get('/halls/{id}/edit', function ($id) {
+            $hall = \App\Models\Hall::findOrFail($id);
+            return view('admin.halls.edit', compact('hall'));
+        })->name('halls.edit');
 
-    Route::post('/movies', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $validated = request()->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'duration' => 'required|integer|min:1|max:300',
-        ]);
-        
-        \App\Models\Movie::create($validated);
-        return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно создан');
-    })->name('movies.store');
+        Route::put('/halls/{id}', function ($id) {
+            $hall = \App\Models\Hall::findOrFail($id);
+            $validated = request()->validate([
+                'name' => 'required|string|max:255',
+                'rows' => 'required|integer|min:1|max:20',
+                'seats_per_row' => 'required|integer|min:1|max:30',
+            ]);
 
-    Route::get('/movies/{id}/edit', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $movie = \App\Models\Movie::findOrFail($id);
-        return view('admin.movies.edit', compact('movie'));
-    })->name('movies.edit');
+            $hall->update([
+                'name' => $validated['name'],
+                'rows' => $validated['rows'],
+                'seats_per_row' => $validated['seats_per_row'],
+                'is_active' => request()->boolean('is_active', $hall->is_active),
+            ]);
 
-    Route::put('/movies/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $movie = \App\Models\Movie::findOrFail($id);
-        $validated = request()->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'duration' => 'required|integer|min:1|max:300',
-        ]);
-        
-        $movie->update($validated);
-        return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно обновлен');
-    })->name('movies.update');
+            return redirect()->route('admin.halls.index')->with('success', 'Зал успешно обновлен');
+        })->name('halls.update');
 
-    Route::delete('/movies/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $movie = \App\Models\Movie::findOrFail($id);
-        $movie->delete();
-        return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно удален');
-    })->name('movies.destroy');
+        Route::delete('/halls/{id}', function ($id) {
+            $hall = \App\Models\Hall::findOrFail($id);
+            $hall->delete();
+            return redirect()->route('admin.halls.index')->with('success', 'Зал успешно удален');
+        })->name('halls.destroy');
 
-    // Sessions
-    Route::get('/sessions', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $date = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
-        $sessions = \App\Models\Session::with(['movie', 'hall'])
-            ->whereDate('start_time', $date)
-            ->orderBy('start_time')
-            ->get();
-        return view('admin.sessions.index', compact('sessions', 'date'));
-    })->name('sessions.index');
+        Route::get('/movies', function () {
+            $movies = \App\Models\Movie::orderByDesc('created_at')->get();
+            return view('admin.movies.index', compact('movies'));
+        })->name('movies.index');
 
-    Route::get('/sessions/create', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $movies = \App\Models\Movie::all();
-        $halls = \App\Models\Hall::all();
-        return view('admin.sessions.create', compact('movies', 'halls'));
-    })->name('sessions.create');
+        Route::get('/movies/create', function () {
+            return view('admin.movies.create');
+        })->name('movies.create');
 
-    Route::post('/sessions', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $validated = request()->validate([
-            'movie_id' => 'required|exists:movies,id',
-            'hall_id' => 'required|exists:halls,id',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-        ]);
-        
-        \App\Models\Session::create($validated);
-        return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно создан');
-    })->name('sessions.store');
+        Route::post('/movies', function () {
+            $validated = request()->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'duration' => 'required|integer|min:1|max:300',
+            ]);
 
-    Route::get('/sessions/{id}/edit', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $session = \App\Models\Session::findOrFail($id);
-        $movies = \App\Models\Movie::all();
-        $halls = \App\Models\Hall::all();
-        return view('admin.sessions.edit', compact('session', 'movies', 'halls'));
-    })->name('sessions.edit');
+            \App\Models\Movie::create($validated);
+            return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно создан');
+        })->name('movies.store');
 
-    Route::put('/sessions/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $session = \App\Models\Session::findOrFail($id);
-        $validated = request()->validate([
-            'movie_id' => 'required|exists:movies,id',
-            'hall_id' => 'required|exists:halls,id',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-        ]);
-        
-        $session->update($validated);
-        return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно обновлен');
-    })->name('sessions.update');
+        Route::get('/movies/{id}/edit', function ($id) {
+            $movie = \App\Models\Movie::findOrFail($id);
+            return view('admin.movies.edit', compact('movie'));
+        })->name('movies.edit');
 
-    Route::delete('/sessions/{id}', function ($id) {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $session = \App\Models\Session::findOrFail($id);
-        $session->delete();
-        return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно удален');
-    })->name('sessions.destroy');
+        Route::put('/movies/{id}', function ($id) {
+            $movie = \App\Models\Movie::findOrFail($id);
+            $validated = request()->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'duration' => 'required|integer|min:1|max:300',
+            ]);
 
-    // Prices
-    Route::get('/prices', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $regularPrice = 500; // Можно хранить в настройках или БД
-        $vipPrice = 1000;
-        return view('admin.prices.index', compact('regularPrice', 'vipPrice'));
-    })->name('prices.index');
+            $movie->update($validated);
+            return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно обновлен');
+        })->name('movies.update');
 
-    Route::put('/prices', function () {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        // Здесь можно сохранить цены в БД или конфиг
-        return redirect()->route('admin.prices.index')->with('success', 'Цены успешно обновлены');
-    })->name('prices.update');
+        Route::delete('/movies/{id}', function ($id) {
+            $movie = \App\Models\Movie::findOrFail($id);
+            $movie->delete();
+            return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно удален');
+        })->name('movies.destroy');
+
+        Route::get('/sessions', function () {
+            $date = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
+            $sessions = \App\Models\Session::with(['movie', 'hall'])
+                ->whereDate('start_time', $date)
+                ->orderBy('start_time')
+                ->get();
+            return view('admin.sessions.index', compact('sessions', 'date'));
+        })->name('sessions.index');
+
+        Route::get('/sessions/create', function () {
+            $movies = \App\Models\Movie::all();
+            $halls = \App\Models\Hall::orderBy('name')->get();
+            return view('admin.sessions.create', compact('movies', 'halls'));
+        })->name('sessions.create');
+
+        Route::post('/sessions', function () {
+            $validated = request()->validate([
+                'movie_id' => 'required|exists:movies,id',
+                'hall_id' => 'required|exists:halls,id',
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+            ]);
+
+            \App\Models\Session::create($validated);
+            return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно создан');
+        })->name('sessions.store');
+
+        Route::get('/sessions/{id}/edit', function ($id) {
+            $session = \App\Models\Session::findOrFail($id);
+            $movies = \App\Models\Movie::all();
+            $halls = \App\Models\Hall::orderBy('name')->get();
+            return view('admin.sessions.edit', compact('session', 'movies', 'halls'));
+        })->name('sessions.edit');
+
+        Route::put('/sessions/{id}', function ($id) {
+            $session = \App\Models\Session::findOrFail($id);
+            $validated = request()->validate([
+                'movie_id' => 'required|exists:movies,id',
+                'hall_id' => 'required|exists:halls,id',
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+            ]);
+
+            $session->update($validated);
+            return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно обновлен');
+        })->name('sessions.update');
+
+        Route::delete('/sessions/{id}', function ($id) {
+            $session = \App\Models\Session::findOrFail($id);
+            $session->delete();
+            return redirect()->route('admin.sessions.index')->with('success', 'Сеанс успешно удален');
+        })->name('sessions.destroy');
+
+        Route::get('/prices', function () {
+            $regularPrice = \App\Models\Setting::getValue('regular_price', config('cinema.default_regular_price'));
+            $vipPrice = \App\Models\Setting::getValue('vip_price', config('cinema.default_vip_price'));
+            return view('admin.prices.index', compact('regularPrice', 'vipPrice'));
+        })->name('prices.index');
+
+        Route::put('/prices', function () {
+            $validated = request()->validate([
+                'regular_price' => 'required|integer|min:0|max:10000',
+                'vip_price' => 'required|integer|min:0|max:15000',
+            ]);
+
+            \App\Models\Setting::setValue('regular_price', $validated['regular_price']);
+            \App\Models\Setting::setValue('vip_price', $validated['vip_price']);
+
+            return back()->with('success', 'Цены успешно обновлены');
+        })->name('prices.update');
+    });
 });
 
 Route::get('/dashboard', function () {
     if (auth()->user()->isAdmin()) {
-        return redirect()->route('admin.halls.index');
+        return redirect()->route('admin.dashboard');
     }
     return redirect()->route('home');
 })->middleware(['auth', 'verified'])->name('dashboard');
