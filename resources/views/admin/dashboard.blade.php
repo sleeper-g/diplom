@@ -13,7 +13,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Управление залами</h2>
         </header>
-        <div class="conf-step__wrapper">
+        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
             <p class="conf-step__paragraph">Доступные залы:</p>
 
             @if($halls->isEmpty())
@@ -67,7 +67,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Конфигурация залов</h2>
         </header>
-        <div class="conf-step__wrapper">
+        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
             @if($halls->isEmpty())
                 <div class="conf-step__empty">
                     Добавьте хотя бы один зал, чтобы настроить ряды и места.
@@ -100,16 +100,16 @@
 
                         <label class="conf-step__label" style="display:block; margin-bottom: 15px;">
                             Название
-                            <input type="text" name="name" class="conf-step__input" value="{{ old('name', $selectedHall->name) }}" required>
+                            <input type="text" name="name" class="conf-step__input" value="{{ old('name', $selectedHall->name) }}" required style="width: 100%; max-width: 300px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                         </label>
 
                         <div class="conf-step__legend">
                             <label class="conf-step__label">Рядов, шт
-                                <input type="number" class="conf-step__input" name="rows" min="1" max="20" value="{{ old('rows', $selectedHall->rows) }}" required>
+                                <input type="number" class="conf-step__input" name="rows" min="1" max="20" value="{{ old('rows', $selectedHall->rows) }}" required style="width: 80px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                             </label>
                             <span class="multiplier">x</span>
                             <label class="conf-step__label">Мест, шт
-                                <input type="number" class="conf-step__input" name="seats_per_row" min="1" max="30" value="{{ old('seats_per_row', $selectedHall->seats_per_row) }}" required>
+                                <input type="number" class="conf-step__input" name="seats_per_row" min="1" max="30" value="{{ old('seats_per_row', $selectedHall->seats_per_row) }}" required style="width: 80px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                             </label>
                         </div>
 
@@ -161,20 +161,20 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Конфигурация цен</h2>
         </header>
-        <div class="conf-step__wrapper">
+        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
             <p class="conf-step__paragraph">Установите цены для типов кресел:</p>
             <form method="POST" action="{{ route('admin.prices.update') }}">
                 @csrf
                 @method('PUT')
                 <div class="conf-step__legend">
                     <label class="conf-step__label">Цена, ₽
-                        <input type="number" class="conf-step__input" min="0" step="50" name="regular_price" value="{{ old('regular_price', $regularPrice) }}" required>
+                        <input type="number" class="conf-step__input" min="0" step="50" name="regular_price" value="{{ old('regular_price', $regularPrice) }}" required style="width: 120px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                     </label>
                     за <span class="conf-step__chair conf-step__chair_standart"></span> обычные места
                 </div>
                 <div class="conf-step__legend">
                     <label class="conf-step__label">Цена, ₽
-                        <input type="number" class="conf-step__input" min="0" step="50" name="vip_price" value="{{ old('vip_price', $vipPrice) }}" required>
+                        <input type="number" class="conf-step__input" min="0" step="50" name="vip_price" value="{{ old('vip_price', $vipPrice) }}" required style="width: 120px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                     </label>
                     за <span class="conf-step__chair conf-step__chair_vip"></span> VIP места
                 </div>
@@ -190,12 +190,12 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Сетка сеансов</h2>
         </header>
-        <div class="conf-step__wrapper">
+        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 2rem;">
             <div class="conf-step__paragraph" style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
                 <form method="GET" action="{{ route('admin.dashboard') }}" style="display:flex; gap:10px; align-items:center;">
                     <label class="conf-step__label" style="margin-bottom:0;">
                         Дата
-                        <input type="date" class="conf-step__input" name="date" value="{{ $date }}">
+                        <input type="date" class="conf-step__input" name="date" value="{{ $date }}" style="width: 180px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px;">
                     </label>
                     <input type="hidden" name="hall_id" value="{{ $selectedHallId }}">
                     <button type="submit" class="conf-step__button conf-step__button-regular">Показать</button>
@@ -206,20 +206,22 @@
                 </div>
             </div>
 
-            <div class="conf-step__movies">
-                @forelse($movies as $movie)
-                    <div class="conf-step__movie">
-                        <img class="conf-step__movie-poster" src="{{ asset('i/admin/poster.png') }}" alt="poster">
-                        <h3 class="conf-step__movie-title">{{ $movie->title }}</h3>
-                        <p class="conf-step__movie-duration">{{ $movie->duration }} минут</p>
-                        <a href="{{ route('admin.movies.edit', $movie->id) }}" class="conf-step__button conf-step__button-regular" style="margin-top:10px;">Редактировать</a>
-                    </div>
-                @empty
-                    <div class="conf-step__empty" style="width:100%;">
-                        Добавьте фильмы, чтобы сформировать афишу.
-                    </div>
-                @endforelse
-            </div>
+            @if($movies->isEmpty())
+                <div class="conf-step__empty">
+                    Добавьте фильмы, чтобы сформировать афишу.
+                </div>
+            @else
+                <div class="conf-step__movies">
+                    @foreach($movies as $movie)
+                        <div class="conf-step__movie">
+                            <img class="conf-step__movie-poster" src="{{ asset('i/admin/poster.png') }}" alt="poster">
+                            <h3 class="conf-step__movie-title">{{ $movie->title }}</h3>
+                            <p class="conf-step__movie-duration">{{ $movie->duration }} минут</p>
+                            <a href="{{ route('admin.movies.edit', $movie->id) }}" class="conf-step__button-link" style="margin-top:8px; display: inline-block; font-size: 1.1rem; padding: 6px 14px;">Редактировать</a>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="conf-step__seances">
                 @forelse($halls as $hall)
