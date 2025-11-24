@@ -230,7 +230,7 @@
                     @endphp
                     <div class="conf-step__seances-hall">
                         <h3 class="conf-step__seances-title">{{ $hall->name }}</h3>
-                        <div class="conf-step__seances-timeline">
+                        <div class="conf-step__seances-timeline" style="{{ $hallSessions->isEmpty() ? 'outline: none;' : '' }}">
                             @forelse($hallSessions as $session)
                                 @php
                                     $start = \Carbon\Carbon::parse($session->start_time);
