@@ -24,22 +24,26 @@
                 <ul class="conf-step__list conf-step__list_with-actions">
                     @foreach($halls as $hall)
                         <li>
-                            <div>
-                                <strong>{{ $hall->name }}</strong>
-                                <span>({{ $hall->rows }} × {{ $hall->seats_per_row }} = {{ $hall->rows * $hall->seats_per_row }} мест)</span>
-                                <span class="conf-step__status {{ $hall->is_active ? 'conf-step__status_online' : 'conf-step__status_offline' }}">
-                                    {{ $hall->is_active ? 'Продажи открыты' : 'Продажи остановлены' }}
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                    <strong style="font-size: 1.6rem;">{{ $hall->name }}</strong>
+                                    <span class="conf-step__status {{ $hall->is_active ? 'conf-step__status_online' : 'conf-step__status_offline' }}">
+                                        {{ $hall->is_active ? 'Продажи открыты' : 'Продажи остановлены' }}
+                                    </span>
+                                </div>
+                                <span style="font-size: 1.4rem; color: #848484; font-weight: 300;">
+                                    {{ $hall->rows }} рядов × {{ $hall->seats_per_row }} мест в ряду = {{ $hall->rows * $hall->seats_per_row }} мест
                                 </span>
                             </div>
                             <div class="conf-step__list-controls">
                                 <a href="{{ route('admin.halls.edit', $hall->id) }}" class="conf-step__button-link">Настроить</a>
-                                <form method="POST" action="{{ route('admin.halls.toggle', $hall->id) }}">
+                                <form method="POST" action="{{ route('admin.halls.toggle', $hall->id) }}" style="display: inline;">
                                     @csrf
-                                    <button type="submit" class="conf-step__button conf-step__button-regular">
+                                    <button type="submit" class="conf-step__button-link" style="background: transparent; border: 1px solid #63536C; cursor: pointer; font-family: inherit;">
                                         {{ $hall->is_active ? 'Приостановить' : 'Открыть' }}
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ route('admin.halls.destroy', $hall->id) }}" onsubmit="return confirm('Удалить зал {{ $hall->name }}?');">
+                                <form method="POST" action="{{ route('admin.halls.destroy', $hall->id) }}" onsubmit="return confirm('Удалить зал {{ $hall->name }}?');" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="conf-step__button conf-step__button-trash"></button>
