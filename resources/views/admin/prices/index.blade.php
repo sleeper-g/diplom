@@ -4,54 +4,63 @@
             <h2 class="conf-step__title">Цены на билеты</h2>
         </header>
         <div class="conf-step__wrapper">
-            <form method="POST" action="{{ route('admin.prices.update') }}" class="space-y-6">
+            @if ($errors->any())
+                <div class="conf-step__alert conf-step__alert_error">
+                    <div class="conf-step__alert-title">Ошибка</div>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.prices.update') }}">
                 @csrf
                 @method('PUT')
 
-                <div>
-                    <x-input-label for="regular_price" :value="__('Цена обычного места (₽)')" />
-                    <x-text-input id="regular_price"
-                                  class="block mt-1 w-full"
-                                  type="number"
-                                  name="regular_price"
-                                  :value="old('regular_price', $regularPrice ?? 500)"
-                                  min="0"
-                                  step="50"
-                                  required />
-                    <x-input-error :messages="$errors->get('regular_price')" class="mt-2" />
-                    <p class="mt-1 text-sm text-gray-500">
-                        Стоимость стандартного кресла
-                    </p>
-                </div>
+                <label class="conf-step__label conf-step__label-fullsize" for="regular_price">
+                    Цена обычного места (₽)
+                    <input class="conf-step__input"
+                           type="number"
+                           name="regular_price"
+                           id="regular_price"
+                           value="{{ old('regular_price', $regularPrice ?? 500) }}"
+                           min="0"
+                           step="50"
+                           required>
+                </label>
+                <p class="conf-step__paragraph" style="margin-top: -0.8rem; margin-bottom: 1.5rem; font-size: 1.2rem; color: #848484;">
+                    Стоимость стандартного кресла
+                </p>
 
-                <div>
-                    <x-input-label for="vip_price" :value="__('Цена VIP места (₽)')" />
-                    <x-text-input id="vip_price"
-                                  class="block mt-1 w-full"
-                                  type="number"
-                                  name="vip_price"
-                                  :value="old('vip_price', $vipPrice ?? 1000)"
-                                  min="0"
-                                  step="50"
-                                  required />
-                    <x-input-error :messages="$errors->get('vip_price')" class="mt-2" />
-                    <p class="mt-1 text-sm text-gray-500">
-                        Стоимость VIP кресла
-                    </p>
-                </div>
+                <label class="conf-step__label conf-step__label-fullsize" for="vip_price">
+                    Цена VIP места (₽)
+                    <input class="conf-step__input"
+                           type="number"
+                           name="vip_price"
+                           id="vip_price"
+                           value="{{ old('vip_price', $vipPrice ?? 1000) }}"
+                           min="0"
+                           step="50"
+                           required>
+                </label>
+                <p class="conf-step__paragraph" style="margin-top: -0.8rem; margin-bottom: 1.5rem; font-size: 1.2rem; color: #848484;">
+                    Стоимость VIP кресла
+                </p>
 
-                <div class="flex items-center justify-end gap-4">
+                <div class="conf-step__buttons text-center">
                     <a href="{{ route('admin.dashboard') }}" class="conf-step__button conf-step__button-regular">Отмена</a>
                     <button type="submit" class="conf-step__button conf-step__button-accent">Сохранить цены</button>
                 </div>
             </form>
 
-            <div class="mt-8 p-4 bg-white rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Информация</h3>
-                <p class="text-sm text-gray-600 mb-2">
+            <div class="conf-step__alert" style="margin-top: 3rem; background-color: rgba(255, 255, 255, 0.85); border-left: 4px solid #16A6AF;">
+                <div class="conf-step__alert-title" style="color: #146C72;">Информация</div>
+                <p class="conf-step__paragraph" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
                     Обновленные значения автоматически подставляются во все новые бронирования.
                 </p>
-                <p class="text-sm text-gray-600">
+                <p class="conf-step__paragraph" style="margin-top: 0.5rem; margin-bottom: 0;">
                     Уже оформленные билеты сохраняют цену, по которой были приобретены.
                 </p>
             </div>
