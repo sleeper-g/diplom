@@ -13,7 +13,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Управление залами</h2>
         </header>
-        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="conf-step__wrapper">
             <p class="conf-step__paragraph">Доступные залы:</p>
 
             @if($halls->isEmpty())
@@ -67,7 +67,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Конфигурация залов</h2>
         </header>
-        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="conf-step__wrapper">
             @if($halls->isEmpty())
                 <div class="conf-step__empty">
                     Добавьте хотя бы один зал, чтобы настроить ряды и места.
@@ -161,7 +161,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Конфигурация цен</h2>
         </header>
-        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="conf-step__wrapper">
             <p class="conf-step__paragraph">Установите цены для типов кресел:</p>
             <form method="POST" action="{{ route('admin.prices.update') }}">
                 @csrf
@@ -190,7 +190,7 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Сетка сеансов</h2>
         </header>
-        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="conf-step__wrapper">
             <div class="conf-step__paragraph" style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
                 <form method="GET" action="{{ route('admin.dashboard') }}" style="display:flex; gap:10px; align-items:center;">
                     <label class="conf-step__label" style="margin-bottom:0;">
