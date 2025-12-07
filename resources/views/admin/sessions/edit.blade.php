@@ -3,17 +3,29 @@
         <header class="conf-step__header conf-step__header_opened">
             <h2 class="conf-step__title">Сеанс #{{ $session->id }}</h2>
         </header>
-        <div class="conf-step__wrapper">
-            <form method="POST" action="{{ route('admin.sessions.update', $session->id) }}" class="space-y-6">
+        <div class="conf-step__wrapper" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            @if ($errors->any())
+                <div class="conf-step__alert conf-step__alert_error">
+                    <div class="conf-step__alert-title">Ошибка</div>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.sessions.update', $session->id) }}">
                 @csrf
                 @method('PUT')
 
-                <div>
-                    <x-input-label for="movie_id" :value="__('Фильм')" />
+                <label class="conf-step__label conf-step__label-fullsize" for="movie_id">
+                    Фильм
                     <select id="movie_id"
                             name="movie_id"
-                            class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            required>
+                            class="conf-step__input"
+                            required
+                            style="width: 100%; max-width: 500px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px; background: #fff; color: #000;">
                         <option value="">Выберите фильм</option>
                         @foreach($movies ?? [] as $movie)
                             <option value="{{ $movie->id }}" {{ old('movie_id', $session->movie_id) == $movie->id ? 'selected' : '' }}>
@@ -21,15 +33,15 @@
                             </option>
                         @endforeach
                     </select>
-                    <x-input-error :messages="$errors->get('movie_id')" class="mt-2" />
-                </div>
+                </label>
 
-                <div>
-                    <x-input-label for="hall_id" :value="__('Зал')" />
+                <label class="conf-step__label conf-step__label-fullsize" for="hall_id">
+                    Зал
                     <select id="hall_id"
                             name="hall_id"
-                            class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            required>
+                            class="conf-step__input"
+                            required
+                            style="width: 100%; max-width: 500px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px; background: #fff; color: #000;">
                         <option value="">Выберите зал</option>
                         @foreach($halls ?? [] as $hall)
                             <option value="{{ $hall->id }}" {{ old('hall_id', $session->hall_id) == $hall->id ? 'selected' : '' }}>
@@ -37,33 +49,32 @@
                             </option>
                         @endforeach
                     </select>
-                    <x-input-error :messages="$errors->get('hall_id')" class="mt-2" />
+                </label>
+
+                <div class="conf-step__legend" style="margin-top: 1rem; display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <label class="conf-step__label" for="start_time">
+                        Дата и время начала
+                        <input class="conf-step__input" 
+                               type="datetime-local" 
+                               name="start_time" 
+                               id="start_time" 
+                               value="{{ old('start_time', \Carbon\Carbon::parse($session->start_time)->format('Y-m-d\TH:i')) }}" 
+                               required
+                               style="width: 100%; max-width: 300px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px; background: #fff; color: #000;">
+                    </label>
+                    <label class="conf-step__label" for="end_time">
+                        Дата и время окончания
+                        <input class="conf-step__input" 
+                               type="datetime-local" 
+                               name="end_time" 
+                               id="end_time" 
+                               value="{{ old('end_time', \Carbon\Carbon::parse($session->end_time)->format('Y-m-d\TH:i')) }}" 
+                               required
+                               style="width: 100%; max-width: 300px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px; background: #fff; color: #000;">
+                    </label>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <x-input-label for="start_time" :value="__('Дата и время начала')" />
-                        <x-text-input id="start_time"
-                                      class="block mt-1 w-full"
-                                      type="datetime-local"
-                                      name="start_time"
-                                      :value="old('start_time', \Carbon\Carbon::parse($session->start_time)->format('Y-m-d\TH:i'))"
-                                      required />
-                        <x-input-error :messages="$errors->get('start_time')" class="mt-2" />
-                    </div>
-                    <div>
-                        <x-input-label for="end_time" :value="__('Дата и время окончания')" />
-                        <x-text-input id="end_time"
-                                      class="block mt-1 w-full"
-                                      type="datetime-local"
-                                      name="end_time"
-                                      :value="old('end_time', \Carbon\Carbon::parse($session->end_time)->format('Y-m-d\TH:i'))"
-                                      required />
-                        <x-input-error :messages="$errors->get('end_time')" class="mt-2" />
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-4">
+                <div class="conf-step__buttons text-center" style="margin-top: 2rem;">
                     <a href="{{ route('admin.sessions.index') }}" class="conf-step__button conf-step__button-regular">
                         Отмена
                     </a>
