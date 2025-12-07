@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Movie extends Model
 {
-    protected $fillable = ['title', 'description', 'duration'];
+    protected $fillable = ['title', 'description', 'duration', 'poster'];
     // Фильм имеет много сеансов
     public function sessions()
     {

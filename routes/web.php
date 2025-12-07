@@ -305,9 +305,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'duration' => 'required|integer|min:1|max:300',
+                'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            \App\Models\Movie::create($validated);
+            $data = $validated;
+            
+            if (request()->hasFile('poster')) {
+                $poster = request()->file('poster');
+                $posterName = time() . '_' . $poster->getClientOriginalName();
+                $poster->move(public_path('storage/posters'), $posterName);
+                $data['poster'] = 'storage/posters/' . $posterName;
+            }
+
+            \App\Models\Movie::create($data);
             return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно создан');
         })->name('movies.store');
 
@@ -322,9 +332,27 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'duration' => 'required|integer|min:1|max:300',
+                'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            $movie->update($validated);
+            $data = $validated;
+            
+            if (request()->hasFile('poster')) {
+                // Удаляем старый постер, если он существует
+                if ($movie->poster && file_exists(public_path($movie->poster))) {
+                    unlink(public_path($movie->poster));
+                }
+                
+                $poster = request()->file('poster');
+                $posterName = time() . '_' . $poster->getClientOriginalName();
+                $poster->move(public_path('storage/posters'), $posterName);
+                $data['poster'] = 'storage/posters/' . $posterName;
+            } else {
+                // Если новый постер не загружен, сохраняем старый
+                unset($data['poster']);
+            }
+
+            $movie->update($data);
             return redirect()->route('admin.movies.index')->with('success', 'Фильм успешно обновлен');
         })->name('movies.update');
 

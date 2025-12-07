@@ -40,7 +40,7 @@
             <section class="movie">
                 <div class="movie__info">
                     <div class="movie__poster">
-                        <img class="movie__poster-image" alt="{{ $movie->title }}" src="{{ asset('i/poster1.jpg') }}">
+                        <img class="movie__poster-image" alt="{{ $movie->title }}" src="{{ $movie->poster ? asset($movie->poster) : asset('i/poster1.jpg') }}">
                     </div>
                     <div class="movie__description">
                         <h2 class="movie__title">{{ $movie->title }}</h2>

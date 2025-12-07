@@ -69,6 +69,47 @@
                     Продажи открыты
                 </label>
 
+                <p class="conf-step__paragraph">Обозначения:</p>
+                <div class="conf-step__legend">
+                    <span class="conf-step__chair conf-step__chair_standart"></span> — обычные места
+                    <span class="conf-step__chair conf-step__chair_vip"></span> — VIP места
+                    <span class="conf-step__chair conf-step__chair_disabled"></span> — заблокировано
+                </div>
+
+                <p class="conf-step__paragraph" style="font-size: 1.2rem; color: #848484; margin-top: 1rem;">
+                    Кликните на место, чтобы изменить его тип (обычное ↔ VIP ↔ заблокировано)
+                </p>
+
+                <div class="conf-step__hall">
+                    <div class="conf-step__hall-wrapper">
+                        @forelse($seatMatrix ?? [] as $rowSeats)
+                            <div class="conf-step__row">
+                                @foreach($rowSeats as $seat)
+                                    @php
+                                        $type = strtolower($seat->type ?? 'regular');
+                                        $seatClass = match ($type) {
+                                            'vip' => 'conf-step__chair_vip',
+                                            'disabled' => 'conf-step__chair_disabled',
+                                            default => 'conf-step__chair_standart',
+                                        };
+                                    @endphp
+                                    <span class="conf-step__chair {{ $seatClass }} seat-editable" 
+                                          data-seat-id="{{ $seat->id }}"
+                                          data-seat-type="{{ $type }}"
+                                          data-row="{{ $seat->row }}"
+                                          data-number="{{ $seat->number }}"
+                                          title="Ряд {{ $seat->row }}, Место {{ $seat->number }}">
+                                    </span>
+                                @endforeach
+                            </div>
+                        @empty
+                            <div class="conf-step__empty">
+                                Места будут сгенерированы автоматически после сохранения параметров зала.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
                 <div class="conf-step__buttons text-center" style="margin-top: 2rem;">
                     <a href="{{ route('admin.halls.index') }}" class="conf-step__button conf-step__button-regular">
                         Отмена
@@ -81,3 +122,63 @@
         </div>
     </section>
 </x-admin-layout>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const seatElements = document.querySelectorAll('.seat-editable');
+    
+    seatElements.forEach(seat => {
+        seat.addEventListener('click', function() {
+            const seatId = this.dataset.seatId;
+            const currentType = this.dataset.seatType;
+            
+            // Toggle type: regular -> vip -> disabled -> regular
+            let newType;
+            let newClass;
+            switch(currentType) {
+                case 'regular':
+                    newType = 'vip';
+                    newClass = 'conf-step__chair_vip';
+                    break;
+                case 'vip':
+                    newType = 'disabled';
+                    newClass = 'conf-step__chair_disabled';
+                    break;
+                case 'disabled':
+                default:
+                    newType = 'regular';
+                    newClass = 'conf-step__chair_standart';
+                    break;
+            }
+            
+            // Update seat type via AJAX
+            fetch(`/admin/seats/${seatId}/update-type`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    type: newType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    this.className = `conf-step__chair ${newClass} seat-editable`;
+                    this.dataset.seatType = newType;
+                } else {
+                    alert('Ошибка при обновлении типа места: ' + (data.message || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ошибка при обновлении типа места');
+            });
+        });
+    });
+});
+</script>
+@endpush

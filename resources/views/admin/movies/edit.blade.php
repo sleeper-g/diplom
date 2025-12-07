@@ -4,7 +4,7 @@
             <h2 class="conf-step__title">Фильм: {{ $movie->title }}</h2>
         </header>
         <div class="conf-step__wrapper">
-            <form method="POST" action="{{ route('admin.movies.update', $movie->id) }}" class="space-y-6">
+            <form method="POST" action="{{ route('admin.movies.update', $movie->id) }}" class="space-y-6" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -12,6 +12,19 @@
                     <x-input-label for="title" :value="__('Название фильма')" />
                     <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title', $movie->title)" required autofocus />
                     <x-input-error :messages="$errors->get('title')" class="mt-2" />
+                </div>
+
+                <div>
+                    <x-input-label for="poster" :value="__('Постер фильма')" />
+                    @if($movie->poster)
+                        <div class="mb-2">
+                            <img src="{{ asset($movie->poster) }}" alt="Текущий постер" class="max-w-xs h-auto rounded-md border border-gray-300">
+                            <p class="mt-1 text-sm text-gray-600">Текущий постер</p>
+                        </div>
+                    @endif
+                    <input id="poster" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" type="file" name="poster" accept="image/*" />
+                    <x-input-error :messages="$errors->get('poster')" class="mt-2" />
+                    <p class="mt-1 text-sm text-gray-500">Максимальный размер: 2MB. Форматы: JPEG, PNG, JPG, GIF. Оставьте пустым, чтобы сохранить текущий постер.</p>
                 </div>
 
                 <div>

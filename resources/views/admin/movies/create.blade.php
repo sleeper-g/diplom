@@ -4,13 +4,20 @@
             <h2 class="conf-step__title">Новый фильм</h2>
         </header>
         <div class="conf-step__wrapper">
-            <form method="POST" action="{{ route('admin.movies.store') }}" class="space-y-6">
+            <form method="POST" action="{{ route('admin.movies.store') }}" class="space-y-6" enctype="multipart/form-data">
                 @csrf
 
                 <div>
                     <x-input-label for="title" :value="__('Название фильма')" />
                     <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title')" required autofocus />
                     <x-input-error :messages="$errors->get('title')" class="mt-2" />
+                </div>
+
+                <div>
+                    <x-input-label for="poster" :value="__('Постер фильма')" />
+                    <input id="poster" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" type="file" name="poster" accept="image/*" />
+                    <x-input-error :messages="$errors->get('poster')" class="mt-2" />
+                    <p class="mt-1 text-sm text-gray-500">Максимальный размер: 2MB. Форматы: JPEG, PNG, JPG, GIF</p>
                 </div>
 
                 <div>

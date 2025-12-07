@@ -16,7 +16,7 @@
                         <li style="position: relative;">
                             <div style="display: flex; align-items: flex-start; gap: 1.5rem;">
                                 <div style="flex-shrink: 0;">
-                                    <img src="{{ asset('i/poster1.jpg') }}" 
+                                    <img src="{{ $movie->poster ? asset($movie->poster) : asset('i/poster1.jpg') }}" 
                                          alt="{{ $movie->title }}" 
                                          style="width: 60px; height: 85px; object-fit: cover; border: 1px solid #b7b7b7; border-radius: 2px;">
                                 </div>

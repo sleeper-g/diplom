@@ -214,7 +214,7 @@
                 <div class="conf-step__movies">
                     @foreach($movies as $movie)
                         <div class="conf-step__movie">
-                            <img class="conf-step__movie-poster" src="{{ asset('i/admin/poster.png') }}" alt="poster">
+                            <img class="conf-step__movie-poster" src="{{ $movie->poster ? asset($movie->poster) : asset('i/admin/poster.png') }}" alt="{{ $movie->title }}">
                             <h3 class="conf-step__movie-title">{{ $movie->title }}</h3>
                             <p class="conf-step__movie-duration">{{ $movie->duration }} минут</p>
                             <a href="{{ route('admin.movies.edit', $movie->id) }}" class="conf-step__button-link" style="margin-top:8px; display: inline-block; font-size: 1.1rem; padding: 6px 14px;">Редактировать</a>
