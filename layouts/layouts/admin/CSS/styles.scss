@@ -368,8 +368,9 @@ input[type='radio'], input[type='submit'], button, .conf-step__header, select {
 
 .conf-step__label, .login__label {
   display: inline-block;
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   color: $grey;
+  font-weight: 500;
 }
 
 .conf-step__label-fullsize {

@@ -39,7 +39,7 @@
                             <img src="{{ asset($movie->poster) }}" 
                                  alt="Текущий постер" 
                                  style="max-width: 200px; max-height: 300px; border: 1px solid #b7b7b7; border-radius: 2px; display: block;">
-                            <small style="display: block; margin-top: 5px; color: #848484; font-size: 1.2rem;">Текущий постер</small>
+                            <small style="display: block; margin-top: 5px; color: #848484; font-size: 1.4rem;">Текущий постер</small>
                         </div>
                     @endif
                     <input class="conf-step__input" 
@@ -48,7 +48,7 @@
                            id="poster" 
                            accept="image/*"
                            style="width: 100%; max-width: 500px; padding: 8px; font-size: 1.4rem; border: 1px solid #b7b7b7; border-radius: 2px; background: #fff; color: #000;">
-                    <small style="display: block; margin-top: 5px; color: #848484; font-size: 1.2rem;">Максимальный размер: 2MB. Форматы: JPEG, PNG, JPG, GIF. Оставьте пустым, чтобы сохранить текущий постер.</small>
+                    <small style="display: block; margin-top: 5px; color: #848484; font-size: 1.4rem;">Максимальный размер: 2MB. Форматы: JPEG, PNG, JPG, GIF. Оставьте пустым, чтобы сохранить текущий постер.</small>
                 </label>
 
                 <label class="conf-step__label conf-step__label-fullsize" for="description">

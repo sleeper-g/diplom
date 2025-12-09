@@ -254,8 +254,9 @@ input[type='radio'], input[type='submit'], button, .conf-step__header, select {
 
 .conf-step__label, .login__label {
   display: inline-block;
-  font-size: 1.2rem;
-  color: #848484; }
+  font-size: 1.6rem;
+  color: #848484;
+  font-weight: 500; }
 
 .conf-step__label-fullsize {
   width: 100%;
