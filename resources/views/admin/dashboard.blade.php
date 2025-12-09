@@ -215,9 +215,11 @@
                     @foreach($movies as $movie)
                         <div class="conf-step__movie">
                             <img class="conf-step__movie-poster" src="{{ $movie->poster ? asset($movie->poster) : asset('i/admin/poster.png') }}" alt="{{ $movie->title }}">
-                            <h3 class="conf-step__movie-title">{{ $movie->title }}</h3>
-                            <p class="conf-step__movie-duration">{{ $movie->duration }} минут</p>
-                            <a href="{{ route('admin.movies.edit', $movie->id) }}" class="conf-step__button-link" style="margin-top:8px; display: inline-block; font-size: 1.1rem; padding: 6px 14px;">Редактировать</a>
+                            <div class="conf-step__movie-info">
+                                <h3 class="conf-step__movie-title">{{ $movie->title }}</h3>
+                                <p class="conf-step__movie-duration">{{ $movie->duration }} минут</p>
+                                <a href="{{ route('admin.movies.edit', $movie->id) }}" class="conf-step__movie-edit">Редактировать</a>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -292,5 +294,136 @@
             @endif
         </div>
     </section>
+
+    <style>
+        .conf-step__movies {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .conf-step__movies .conf-step__movie {
+            position: relative;
+            width: calc((100% - 40px) / 3);
+            min-height: auto;
+            padding: 15px;
+            background: #FFEB85;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .conf-step__movies .conf-step__movie:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .conf-step__movies .conf-step__movie:nth-of-type(3n + 2) {
+            margin: 0;
+        }
+        
+        .conf-step__movies .conf-step__movie:nth-of-type(n + 4) {
+            margin-top: 0;
+        }
+        
+        .conf-step__movies .conf-step__movie:nth-of-type(1) {
+            background-color: #caff85;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(2) {
+            background-color: #85ff89;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(3) {
+            background-color: #85ffd3;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(4) {
+            background-color: #85e2ff;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(5) {
+            background-color: #8599ff;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(6) {
+            background-color: #ba85ff;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(7) {
+            background-color: #ff85fb;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(8) {
+            background-color: #ff85b1;
+        }
+        .conf-step__movies .conf-step__movie:nth-of-type(9) {
+            background-color: #ffa285;
+        }
+        
+        .conf-step__movies .conf-step__movie-poster {
+            position: static;
+            width: 100%;
+            max-width: 120px;
+            height: auto;
+            max-height: 180px;
+            object-fit: cover;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        .conf-step__movies .conf-step__movie-info {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .conf-step__movies .conf-step__movie-title {
+            font-weight: 500;
+            font-size: 1.4rem;
+            margin: 0;
+            line-height: 1.3;
+        }
+        
+        .conf-step__movies .conf-step__movie-duration {
+            font-size: 1.3rem;
+            color: rgba(0, 0, 0, 0.7);
+            margin: 0;
+        }
+        
+        .conf-step__movies .conf-step__movie-edit {
+            display: inline-block;
+            font-size: 1.1rem;
+            padding: 4px 10px;
+            margin-top: 4px;
+            text-decoration: none;
+            color: #000;
+            border: none;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.6);
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .conf-step__movies .conf-step__movie-edit:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .conf-step__movies .conf-step__movie {
+                width: calc((100% - 20px) / 2);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .conf-step__movies .conf-step__movie {
+                width: 100%;
+            }
+        }
+    </style>
 </x-admin-layout>
 
