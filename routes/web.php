@@ -70,6 +70,22 @@ Route::middleware('auth')->group(function () {
             return redirect()->back()->withErrors(['seats' => 'Выберите хотя бы одно место']);
         }
 
+        // Проверяем, что выбранные места не заблокированы и не заняты
+        $seatIds = array_column($selectedSeats, 'seat_id');
+        $seats = \App\Models\Seat::whereIn('id', $seatIds)->get();
+        
+        foreach ($seats as $seat) {
+            // Проверка на заблокированные места
+            if ($seat->type === 'disabled') {
+                return redirect()->back()->withErrors(['seats' => "Место Ряд {$seat->row}, Место {$seat->number} заблокировано и не может быть забронировано"]);
+            }
+            
+            // Проверка на уже занятые места
+            if ($session->tickets->contains('seat_id', $seat->id)) {
+                return redirect()->back()->withErrors(['seats' => "Место Ряд {$seat->row}, Место {$seat->number} уже занято"]);
+            }
+        }
+
         // Сохраняем данные в сессию для страницы оплаты
         session([
             'booking_session_id' => $session->id,
@@ -115,11 +131,27 @@ Route::middleware('auth')->group(function () {
             'selected_seats' => 'required|json',
         ]);
 
-        $session = \App\Models\Session::with(['movie', 'hall'])->findOrFail($validated['session_id']);
+        $session = \App\Models\Session::with(['movie', 'hall', 'tickets'])->findOrFail($validated['session_id']);
         $selectedSeats = json_decode($validated['selected_seats'], true);
 
         if (empty($selectedSeats) || !is_array($selectedSeats)) {
             return redirect()->back()->withErrors(['seats' => 'Выберите хотя бы одно место']);
+        }
+
+        // Проверяем, что выбранные места не заблокированы и не заняты
+        $seatIds = array_column($selectedSeats, 'seat_id');
+        $seats = \App\Models\Seat::whereIn('id', $seatIds)->get();
+        
+        foreach ($seats as $seat) {
+            // Проверка на заблокированные места
+            if ($seat->type === 'disabled') {
+                return redirect()->back()->withErrors(['seats' => "Место Ряд {$seat->row}, Место {$seat->number} заблокировано и не может быть забронировано"]);
+            }
+            
+            // Проверка на уже занятые места
+            if ($session->tickets->contains('seat_id', $seat->id)) {
+                return redirect()->back()->withErrors(['seats' => "Место Ряд {$seat->row}, Место {$seat->number} уже занято"]);
+            }
         }
 
         // Генерируем уникальный код бронирования
@@ -130,6 +162,11 @@ Route::middleware('auth')->group(function () {
         // Создаем билеты
         foreach ($selectedSeats as $seatData) {
             $seat = \App\Models\Seat::findOrFail($seatData['seat_id']);
+            
+            // Проверяем, не заблокировано ли место
+            if ($seat->type === 'disabled') {
+                return redirect()->back()->withErrors(['error' => "Место Ряд {$seat->row}, Место {$seat->number} заблокировано и не может быть забронировано"]);
+            }
             
             // Проверяем, не занято ли место
             $existingTicket = \App\Models\Ticket::where('session_id', $session->id)

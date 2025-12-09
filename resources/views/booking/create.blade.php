@@ -38,21 +38,25 @@
                                         });
                                         $isBooked = $seatModel && $session->tickets->contains('seat_id', $seatModel->id);
                                         $seatType = $seatModel->type ?? 'regular';
+                                        $isDisabled = $seatType === 'disabled';
                                     @endphp
                                     <span class="buying-scheme__chair 
                                         @if($isBooked)
                                             buying-scheme__chair_taken
+                                        @elseif($isDisabled)
+                                            buying-scheme__chair_disabled
                                         @elseif($seatType === 'VIP')
                                             buying-scheme__chair_vip
                                         @else
                                             buying-scheme__chair_standart
                                         @endif
-                                        seat-btn"
+                                        @if(!$isBooked && !$isDisabled) seat-btn @endif"
                                         data-seat-id="{{ $seatModel->id ?? '' }}"
                                         data-row="{{ $row }}"
                                         data-number="{{ $seat }}"
                                         data-type="{{ $seatType }}"
-                                        @if(!$isBooked) style="cursor: pointer;" @endif>
+                                        data-disabled="{{ $isDisabled ? 'true' : 'false' }}"
+                                        @if(!$isBooked && !$isDisabled) style="cursor: pointer;" @endif>
                                     </span>
                                 @endfor
                             </div>
@@ -74,6 +78,10 @@
                             <p class="buying-scheme__legend-price">
                                 <span class="buying-scheme__chair buying-scheme__chair_taken"></span> 
                                 Занято
+                            </p>
+                            <p class="buying-scheme__legend-price">
+                                <span class="buying-scheme__chair buying-scheme__chair_disabled"></span> 
+                                Заблокировано
                             </p>
                             <p class="buying-scheme__legend-price">
                                 <span class="buying-scheme__chair buying-scheme__chair_selected"></span> 
@@ -111,7 +119,9 @@
 
             document.querySelectorAll('.seat-btn').forEach(btn => {
                 const isBooked = btn.classList.contains('buying-scheme__chair_taken');
-                if (!isBooked) {
+                const isDisabled = btn.dataset.disabled === 'true' || btn.classList.contains('buying-scheme__chair_disabled');
+                
+                if (!isBooked && !isDisabled) {
                     btn.addEventListener('click', function() {
                         const seatId = this.dataset.seatId;
                         const row = this.dataset.row;
