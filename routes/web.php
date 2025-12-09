@@ -282,7 +282,50 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
                 'is_active' => request()->boolean('is_active', $hall->is_active),
             ]);
 
-            return redirect()->route('admin.halls.index')->with('success', 'Зал успешно обновлен');
+            // Обновляем типы мест, если они были изменены
+            if (request()->has('seat_types')) {
+                $seatTypesJson = request()->input('seat_types');
+                if (!empty($seatTypesJson)) {
+                    $seatTypes = json_decode($seatTypesJson, true);
+                    if (is_array($seatTypes)) {
+                        foreach ($seatTypes as $seatId => $type) {
+                            $seat = \App\Models\Seat::find($seatId);
+                            if ($seat && $seat->hall_id == $hall->id) {
+                                // Преобразуем тип: regular -> regular, vip -> VIP, disabled -> disabled
+                                $dbType = match($type) {
+                                    'vip' => 'VIP',
+                                    'disabled' => 'disabled',
+                                    default => 'regular',
+                                };
+                                $seat->update(['type' => $dbType]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Генерируем места, если их еще нет или изменились размеры зала
+            $existingSeats = $hall->seats()->count();
+            $expectedSeats = $hall->rows * $hall->seats_per_row;
+            
+            if ($existingSeats != $expectedSeats) {
+                // Удаляем старые места
+                $hall->seats()->delete();
+                
+                // Создаем новые места
+                for ($row = 1; $row <= $hall->rows; $row++) {
+                    for ($number = 1; $number <= $hall->seats_per_row; $number++) {
+                        \App\Models\Seat::create([
+                            'hall_id' => $hall->id,
+                            'row' => $row,
+                            'number' => $number,
+                            'type' => 'regular',
+                        ]);
+                    }
+                }
+            }
+
+            return redirect()->route('admin.dashboard', ['hall_id' => $hall->id])->with('success', 'Зал успешно обновлен');
         })->name('halls.update');
 
         Route::delete('/halls/{id}', function ($id) {

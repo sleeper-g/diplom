@@ -135,7 +135,13 @@
                                                     default => 'conf-step__chair_standart',
                                                 };
                                             @endphp
-                                            <span class="conf-step__chair {{ $seatClass }}"></span>
+                                            <span class="conf-step__chair {{ $seatClass }} seat-editable" 
+                                                  data-seat-id="{{ $seat->id }}"
+                                                  data-row="{{ $seat->row }}"
+                                                  data-number="{{ $seat->number }}"
+                                                  data-seat-type="{{ $type }}"
+                                                  style="cursor: pointer;"
+                                                  title="Кликните для изменения типа места"></span>
                                         @endforeach
                                     </div>
                                 @empty
@@ -146,11 +152,56 @@
                             </div>
                         </div>
 
+                        <input type="hidden" name="seat_types" id="seat_types" value="{}">
+
                         <fieldset class="conf-step__buttons text-center">
                             <a href="{{ route('admin.halls.index') }}" class="conf-step__button conf-step__button-regular">Все залы</a>
                             <button type="submit" class="conf-step__button conf-step__button-accent">Сохранить</button>
                         </fieldset>
                     </form>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const seatElements = document.querySelectorAll('.seat-editable');
+                        const seatTypesInput = document.getElementById('seat_types');
+                        const seatTypes = {};
+                        
+                        seatElements.forEach(seat => {
+                            seat.addEventListener('click', function() {
+                                const seatId = this.dataset.seatId;
+                                const currentType = this.dataset.seatType;
+                                
+                                // Переключение типа: regular -> vip -> disabled -> regular
+                                let newType;
+                                let newClass;
+                                switch(currentType) {
+                                    case 'regular':
+                                        newType = 'vip';
+                                        newClass = 'conf-step__chair_vip';
+                                        break;
+                                    case 'vip':
+                                        newType = 'disabled';
+                                        newClass = 'conf-step__chair_disabled';
+                                        break;
+                                    case 'disabled':
+                                    default:
+                                        newType = 'regular';
+                                        newClass = 'conf-step__chair_standart';
+                                        break;
+                                }
+                                
+                                // Обновляем классы
+                                this.classList.remove('conf-step__chair_standart', 'conf-step__chair_vip', 'conf-step__chair_disabled');
+                                this.classList.add(newClass);
+                                this.dataset.seatType = newType;
+                                
+                                // Сохраняем изменения в объект
+                                seatTypes[seatId] = newType;
+                                seatTypesInput.value = JSON.stringify(seatTypes);
+                            });
+                        });
+                    });
+                    </script>
                 @endif
             @endif
         </div>
